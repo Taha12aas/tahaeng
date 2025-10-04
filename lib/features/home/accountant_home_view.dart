@@ -37,7 +37,7 @@ class AccountantHomeView extends StatelessWidget {
                 ],
               ),
             ),
-            body: const TabBarView(children: [NotifTab(), PostedListView()]),
+            body: const TabBarView(children: [NotifTab(), PostedListPage()]),
           ),
         ),
       ),
