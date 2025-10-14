@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tahaeng/features/auth/notifs/cubit/posted_state/PostedCubit.dart';
+import 'package:tahaeng/features/utils/font_style.dart';
 import '../../invoice/invoice_details_view.dart';
 import '../cubit/notif_cubit.dart';
 import '../cubit/notif_state.dart';
@@ -118,7 +119,10 @@ class _NotifTabState extends State<NotifTab> {
                       Row(
                         children: [
                           Chip(
-                            label: Text(_typeLabel(type)),
+                            label: Text(
+                              _typeLabel(type),
+                              style: FontStyleApp.appColor18,
+                            ),
                             backgroundColor: Colors.white,
                             side: BorderSide(color: Colors.grey.shade300),
                           ),
@@ -127,16 +131,10 @@ class _NotifTabState extends State<NotifTab> {
                             g.kind == 'new'
                                 ? 'فاتورة جديدة'
                                 : 'تم تعديل فاتورة',
-                            style: const TextStyle(fontWeight: FontWeight.bold),
+                            style: FontStyleApp.appColor18,
                           ),
                           const Spacer(),
-                          Text(
-                            '#${g.invoiceId.substring(0, 8)}',
-                            style: const TextStyle(
-                              color: Colors.black54,
-                              fontFeatures: [FontFeature.tabularFigures()],
-                            ),
-                          ),
+                          Text('#${g.invoiceId.substring(0, 8)}'),
                         ],
                       ),
                       const Divider(),
@@ -146,18 +144,30 @@ class _NotifTabState extends State<NotifTab> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('الحساب: ${g.accountName ?? '-'}'),
+                                Text(
+                                  style: FontStyleApp.appColor18,
+                                  'الحساب: ${g.accountName ?? '-'}',
+                                ),
                                 const SizedBox(height: 4),
-                                Text('التاريخ: ${g.invoiceDate ?? '-'}'),
+                                Text(
+                                  style: FontStyleApp.appColor18,
+                                  'التاريخ: ${g.invoiceDate ?? '-'}',
+                                ),
                               ],
                             ),
                           ),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              Text('النوع: ${_typeLabel(type)}'),
+                              Text(
+                                style: FontStyleApp.appColor18,
+                                'النوع: ${_typeLabel(type)}',
+                              ),
                               const SizedBox(height: 4),
-                              Text('تغييرات: ${g.count}'),
+                              Text(
+                                style: FontStyleApp.appColor18,
+                                'تغييرات: ${g.count}',
+                              ),
                             ],
                           ),
                         ],

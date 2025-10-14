@@ -9,12 +9,14 @@ import '../services/notification_service.dart';
 class NotifListView extends StatelessWidget {
   const NotifListView({super.key});
 
-  String _kindLabel(String kind) => kind == 'new' ? 'فاتورة جديدة' : 'تم تعديل فاتورة';
+  String _kindLabel(String kind) =>
+      kind == 'new' ? 'فاتورة جديدة' : 'تم تعديل فاتورة';
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => NotifCubit(NotificationService(Supabase.instance.client))..load(),
+      create: (_) =>
+          NotifCubit(NotificationService(Supabase.instance.client))..load(),
       child: Directionality(
         textDirection: TextDirection.rtl,
         child: Scaffold(
@@ -54,7 +56,9 @@ class NotifListView extends StatelessWidget {
                 separatorBuilder: (_, __) => const SizedBox(height: 8),
                 itemBuilder: (_, i) {
                   final g = groups[i];
-                  final color = g.kind == 'new' ? Colors.green.shade50 : Colors.orange.shade50;
+                  final color = g.kind == 'new'
+                      ? Colors.green.shade50
+                      : Colors.orange.shade50;
 
                   return Card(
                     color: color,
@@ -64,7 +68,9 @@ class NotifListView extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text('الحساب: ${g.accountName ?? '-'}'),
-                          Text('التاريخ: ${g.invoiceDate ?? '-'} | النوع: ${g.invoiceType ?? '-'}'),
+                          Text(
+                            'التاريخ: ${g.invoiceDate ?? '-'} | النوع: ${g.invoiceType ?? '-'}',
+                          ),
                           Text('عدد التغييرات: ${g.count}'),
                         ],
                       ),
@@ -75,14 +81,18 @@ class NotifListView extends StatelessWidget {
                             onPressed: () {
                               Navigator.of(context).push(
                                 MaterialPageRoute(
-                                  builder: (_) => InvoiceDetailsView(invoiceId: g.invoiceId),
+                                  builder: (_) => InvoiceDetailsView(
+                                    invoiceId: g.invoiceId,
+                                  ),
                                 ),
                               );
                             },
                             child: const Text('فتح'),
                           ),
                           ElevatedButton(
-                            onPressed: () => context.read<NotifCubit>().checkInvoice(g.invoiceId),
+                            onPressed: () => context
+                                .read<NotifCubit>()
+                                .checkInvoice(g.invoiceId),
                             child: const Text('تم التدقيق'),
                           ),
                         ],

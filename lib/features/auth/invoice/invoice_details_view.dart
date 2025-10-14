@@ -4,6 +4,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:tahaeng/features/auth/notifs/cubit/posted_state/PostedCubit.dart';
+import 'package:tahaeng/features/auth/notifs/widgets/status_chip.dart';
+import 'package:tahaeng/features/utils/const.dart';
+import 'package:tahaeng/features/utils/font_style.dart';
 import '../notifs/cubit/notif_cubit.dart';
 
 import 'invoice_service.dart';
@@ -119,7 +122,7 @@ class _InvoiceDetailsViewState extends State<InvoiceDetailsView> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),
               child: Center(
-                child: _StatusChip(
+                child: StatusChip(
                   checked: data?['checked_by_accountant'] == true,
                 ),
               ),
@@ -135,7 +138,6 @@ class _InvoiceDetailsViewState extends State<InvoiceDetailsView> {
               padding: const EdgeInsets.all(12),
               child: Column(
                 children: [
-                  // كارد رأس الفاتورة
                   Card(
                     elevation: 2,
                     shape: RoundedRectangleBorder(
@@ -147,48 +149,7 @@ class _InvoiceDetailsViewState extends State<InvoiceDetailsView> {
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // معلومات عامة
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Wrap(
-                                  spacing: 8,
-                                  runSpacing: 8,
-                                  children: [
-                                    Chip(
-                                      label: Text(
-                                        typeLabel(
-                                          (data!['type'] ?? '').toString(),
-                                        ),
-                                      ),
-                                      backgroundColor: Colors.white,
-                                      side: BorderSide(
-                                        color: Colors.grey.shade300,
-                                      ),
-                                    ),
-                                    Chip(
-                                      label: Text(
-                                        '#${(data['id'] as String).substring(0, 8)}',
-                                      ),
-                                      backgroundColor: Colors.white,
-                                      side: BorderSide(
-                                        color: Colors.grey.shade300,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 8),
-                                Text('التاريخ: ${data['date'] ?? '-'}'),
-                                Text(
-                                  'الحساب: ${data['accounts']?['name'] ?? '-'}',
-                                ),
-                              ],
-                            ),
-                          ),
-
-                          // زر "تم التدقيق"
-                          if (data['checked_by_accountant'] != true)
+                          if (data?['checked_by_accountant'] != true)
                             ElevatedButton.icon(
                               onPressed: _checking ? null : _checkInvoice,
                               icon: _checking
@@ -201,8 +162,45 @@ class _InvoiceDetailsViewState extends State<InvoiceDetailsView> {
                                       ),
                                     )
                                   : const Icon(Icons.verified),
-                              label: const Text('تم التدقيق'),
+                              label: const Text(
+                                'تم التدقيق',
+                                style: FontStyleApp.appColor18,
+                              ),
                             ),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Wrap(
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  children: [
+                                    Chip(
+                                      label: Text(
+                                        style: FontStyleApp.appColor18,
+                                        typeLabel(
+                                          (data!['type'] ?? '').toString(),
+                                        ),
+                                      ),
+                                      backgroundColor: Colors.white,
+                                      side: BorderSide(
+                                        color: Colors.grey.shade300,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'التاريخ: ${data['date'] ?? '-'}',
+                                  style: FontStyleApp.black18,
+                                ),
+                                Text(
+                                  style: FontStyleApp.black18,
+                                  'الحساب: ${data['accounts']?['name'] ?? '-'}',
+                                ),
+                              ],
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -220,19 +218,20 @@ class _InvoiceDetailsViewState extends State<InvoiceDetailsView> {
                       child: Padding(
                         padding: const EdgeInsets.all(12),
                         child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Icon(
-                              Icons.sticky_note_2_outlined,
-                              color: Colors.teal,
-                            ),
-                            const SizedBox(width: 8),
                             Expanded(
                               child: Text(
+                                textAlign: TextAlign.right,
                                 (data['notes'] ?? '').toString(),
-                                style: const TextStyle(fontSize: 14),
+                                style: FontStyleApp.appColor18,
                               ),
                             ),
+                            SizedBox(width: 10),
+                            const Icon(
+                              Icons.sticky_note_2_outlined,
+                              color: kAppColor,
+                            ),
+                            const SizedBox(width: 8),
                           ],
                         ),
                       ),
@@ -243,136 +242,13 @@ class _InvoiceDetailsViewState extends State<InvoiceDetailsView> {
 
                   // بطاقات الأصناف (اسم المادة + كود المحاسبة + الوحدة + الكمية)
                   Expanded(
-                    child: _ItemsCards(
+                    child: ItemsCards(
                       items: (data['invoice_items'] as List?) ?? const [],
                     ),
                   ),
                 ],
               ),
             ),
-    );
-  }
-}
-
-class _StatusChip extends StatelessWidget {
-  final bool checked;
-  const _StatusChip({required this.checked});
-
-  @override
-  Widget build(BuildContext context) {
-    return Chip(
-      avatar: Icon(
-        checked ? Icons.verified : Icons.hourglass_bottom,
-        color: checked ? Colors.green : Colors.orange,
-        size: 18,
-      ),
-      label: Text(
-        checked ? 'مدقّقة' : 'بانتظار تدقيق',
-        style: TextStyle(color: checked ? Colors.green : Colors.orange),
-      ),
-      backgroundColor: Colors.white,
-      side: BorderSide(
-        color: (checked ? Colors.green : Colors.orange).withOpacity(0.4),
-      ),
-    );
-  }
-}
-
-class _ItemsCards extends StatelessWidget {
-  final List items;
-  const _ItemsCards({required this.items});
-
-  String fmtQty(num v) {
-    final dv = v.toDouble();
-    if (dv == dv.roundToDouble()) return dv.toStringAsFixed(0);
-    return dv
-        .toStringAsFixed(3)
-        .replaceFirst(RegExp(r'0+$'), '')
-        .replaceFirst(RegExp(r'\.$'), '');
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (items.isEmpty) {
-      return const Center(child: Text('لا توجد أصناف'));
-    }
-    return ListView.separated(
-      padding: const EdgeInsets.all(4),
-      itemCount: items.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 8),
-      itemBuilder: (_, i) {
-        final it = items[i] as Map<String, dynamic>;
-        final med = it['medicines'] as Map<String, dynamic>?;
-
-        final name = med?['name'] ?? '-';
-        final unit = med?['unit'] ?? '-';
-        final accCode = med?['internal_code'] ?? '-';
-        final qty = fmtQty(it['quantity'] as num);
-
-        return Card(
-          elevation: 2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-            side: BorderSide(color: Colors.grey.shade300),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            child: Row(
-              children: [
-                // الكمية بخط واضح
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.teal.shade50,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    qty,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                // اسم المادة + كود المحاسبة + الوحدة
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        name,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Chip(
-                            label: Text('كود المحاسبة: $accCode'),
-                            backgroundColor: Colors.white,
-                            side: BorderSide(color: Colors.grey.shade300),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'الوحدة: $unit',
-                            style: const TextStyle(color: Colors.black54),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
     );
   }
 }

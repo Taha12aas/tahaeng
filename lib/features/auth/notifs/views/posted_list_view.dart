@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tahaeng/features/auth/invoice/invoice_details_view.dart';
 import 'package:tahaeng/features/auth/notifs/cubit/posted_state/PostedCubit.dart';
 import 'package:tahaeng/features/auth/notifs/cubit/posted_state/posted_state.dart';
+import 'package:tahaeng/features/utils/font_style.dart';
 
 class PostedListPage extends StatefulWidget {
   const PostedListPage({super.key});
@@ -71,7 +72,7 @@ class _PostedListPageState extends State<PostedListPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('الفواتير المدقّقة'),
+        title: const Text('الفواتير المدقّقة', style: FontStyleApp.appColor18),
         actions: [
           if (cubit.fromDate != null || cubit.toDate != null)
             IconButton(
@@ -123,17 +124,32 @@ class _PostedListPageState extends State<PostedListPage> {
                       itemBuilder: (context, index) {
                         if (index < items.length) {
                           final it = items[index];
+
+                          String _typeLabel(String type) {
+                            switch (type) {
+                              case 'sale':
+                                return 'مبيع';
+                              case 'buy':
+                                return 'شراء';
+                              case 'undoSell':
+                                return 'مردود مبيع';
+                              case 'undoBuy':
+                                return 'مردود شراء';
+                              case 'order':
+                                return 'نقل';
+                              default:
+                                return type;
+                            }
+                          }
+
                           return ListTile(
                             title: Text(
-                              '${it.type} • ${it.accountName ?? '-'}',
+                              style: FontStyleApp.black18,
+                              '${_typeLabel(it.type)} • ${it.accountName ?? '-'}',
                             ),
-
                             trailing: Text(
                               it.date,
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.indigo,
-                              ),
+                              style: FontStyleApp.appColor18,
                             ),
                             onTap: () async {
                               final inv = it;
