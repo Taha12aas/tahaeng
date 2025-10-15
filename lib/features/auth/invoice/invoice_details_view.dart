@@ -194,9 +194,12 @@ class _InvoiceDetailsViewState extends State<InvoiceDetailsView> {
                                   'التاريخ: ${data['date'] ?? '-'}',
                                   style: FontStyleApp.black18,
                                 ),
-                                Text(
-                                  style: FontStyleApp.black18,
-                                  'الحساب: ${data['accounts']?['name'] ?? '-'}',
+                                SizedBox(height: 5),
+                                FittedBox(
+                                  child: Text(
+                                    style: FontStyleApp.black18,
+                                    'الحساب: ${data['accounts']?['name'] ?? '-'}',
+                                  ),
                                 ),
                               ],
                             ),

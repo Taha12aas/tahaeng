@@ -11,40 +11,46 @@ class NotificationService {
   Future<List<AccountantNotification>> fetchUnread() async {
     final res = await sb
         .from('accountant_notifications')
-        .select('''
-          id, invoice_id, kind, is_read, created_at,
-          invoices:invoice_id (
-            id, date, type, checked_by_accountant,
-            accounts:account_id (name)
-          )
-        ''')
+        .select(r'''
+    id, invoice_id, kind, is_read, created_at,
+    invoices:invoice_id!inner (
+      id, date, type, checked_by_accountant,
+      accounts:account_id (name)
+    )
+  ''')
         .eq('is_read', false)
+        .eq('invoices.checked_by_accountant', false)
         .order('created_at', ascending: false);
-
-    return (res as List)
-        .map((e) => AccountantNotification.fromJson(e as Map<String, dynamic>))
+    final rows = (res as List)
+        .map((e) => Map<String, dynamic>.from(e as Map))
         .toList();
+    return rows.map(AccountantNotification.fromJson).toList();
   }
 
-  // تجميع الإشعارات حسب الفاتورة (لإظهار كرت واحد مع عدّاد تغييرات)
   List<NotifGroup> groupByInvoice(List<AccountantNotification> items) {
     final map = groupBy(items, (e) => e.invoiceId);
     final groups = <NotifGroup>[];
+
     map.forEach((invoiceId, list) {
       list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       final latest = list.first;
+
+      final editCount = list.where((n) => n.kind == 'edit').length;
+      final kindForCard = editCount > 0 ? 'edit' : 'new';
+
       groups.add(
         NotifGroup(
           invoiceId: invoiceId,
-          kind: latest.kind,
+          kind: kindForCard,
           latestAt: latest.createdAt,
-          count: list.length,
+          count: editCount, // تغييرات = edit فقط
           accountName: latest.accountName,
           invoiceDate: latest.invoiceDate,
           invoiceType: latest.invoiceType,
         ),
       );
     });
+
     groups.sort((a, b) => b.latestAt.compareTo(a.latestAt));
     return groups;
   }

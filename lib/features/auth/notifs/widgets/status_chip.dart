@@ -19,6 +19,7 @@ class StatusChip extends StatelessWidget {
       ),
       backgroundColor: Colors.white,
       side: BorderSide(
+        // ignore: deprecated_member_use
         color: (checked ? Colors.green : Colors.orange).withOpacity(0.4),
       ),
     );
@@ -43,6 +44,7 @@ class ItemsCards extends StatelessWidget {
     if (items.isEmpty) {
       return const Center(child: Text('لا توجد أصناف'));
     }
+
     return ListView.separated(
       padding: const EdgeInsets.all(4),
       itemCount: items.length,
@@ -51,10 +53,10 @@ class ItemsCards extends StatelessWidget {
         final it = items[i] as Map<String, dynamic>;
         final med = it['medicines'] as Map<String, dynamic>?;
 
-        final name = med?['name'] ?? '-';
-        final unit = med?['unit'] ?? '-';
-        final accCode = med?['internal_code'] ?? '-';
-        final qty = fmtQty(it['quantity'] as num);
+        final name = (med?['name'] ?? '-').toString();
+        final unit = (med?['unit'] ?? '-').toString();
+        final accCode = (med?['internal_code'] ?? '').toString();
+        final qty = fmtQty((it['quantity'] as num?) ?? 0);
 
         return Directionality(
           textDirection: TextDirection.rtl,
@@ -67,8 +69,9 @@ class ItemsCards extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // الكمية بخط واضح
+                  // الكمية بحبة واضحة
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12,
@@ -81,34 +84,53 @@ class ItemsCards extends StatelessWidget {
                     child: Text(qty, style: FontStyleApp.appColor18),
                   ),
                   const SizedBox(width: 10),
-                  // اسم المادة + كود المحاسبة + الوحدة
+
+                  // الاسم + الوحدة + كود المحاسبة
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // سطر الاسم + الوحدة
                         Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            Text(name, style: FontStyleApp.appColor18),
-                            Spacer(),
-                            Text(
-                              'الوحدة: $unit',
-                              style: FontStyleApp.appColor18,
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            Chip(
-                              label: Text(
-                                'كود المحاسبة: $accCode',
-                                style: FontStyleApp.appColor18,
+                            // اسم المادة (يتقص تلقائياً لو طويل)
+                            Expanded(
+                              child: Tooltip(
+                                message: name,
+                                waitDuration: const Duration(milliseconds: 300),
+                                child: Text(
+                                  name,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  textAlign: TextAlign.right,
+                                  style: FontStyleApp.appColor18.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
                               ),
-                              backgroundColor: Colors.white,
-                              side: BorderSide(color: Colors.grey.shade300),
                             ),
                             const SizedBox(width: 8),
+                            // شارة الوحدة
+                            _unitPill(unit),
                           ],
+                        ),
+
+                        const SizedBox(height: 6),
+
+                        // كود المحاسبة داخل صندوق صغير قابل للاقتصاص
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(
+                              maxWidth: 260, // حد أقصى للعرض حتى ما يكسر السطر
+                            ),
+                            child: _tagBox(
+                              text: accCode.isEmpty
+                                  ? 'كود المحاسبة: -'
+                                  : 'كود المحاسبة: $accCode',
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -119,6 +141,38 @@ class ItemsCards extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+
+  Widget _unitPill(String unit) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Text(
+        unit.isEmpty ? '-' : unit,
+        style: const TextStyle(fontSize: 12.5, color: Colors.black87),
+      ),
+    );
+  }
+
+  Widget _tagBox({required String text}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        text,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(fontSize: 12.5, color: Colors.black87),
+      ),
     );
   }
 }

@@ -194,6 +194,7 @@ class _NotifTabState extends State<NotifTab> {
                             },
                             child: const Text('تفاصيل'),
                           ),
+                          Spacer(),
                           const SizedBox(width: 8),
                           ElevatedButton.icon(
                             onPressed: isBusy
