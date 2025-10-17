@@ -16,4 +16,6 @@ class NotifGroup {
     this.invoiceDate,
     this.invoiceType,
   });
+
+  get checkedByAccountant => null;
 }

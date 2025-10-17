@@ -19,7 +19,7 @@ class _NotifTabState extends State<NotifTab> {
 
   String _typeLabel(String type) {
     switch (type) {
-      case 'sale':
+      case 'sale':  
         return 'مبيع';
       case 'buy':
         return 'شراء';
@@ -52,7 +52,6 @@ class _NotifTabState extends State<NotifTab> {
     setState(() => _busy.add(invoiceId));
     try {
       await context.read<NotifCubit>().checkInvoice(invoiceId);
-      // نقل الفاتورة إلى "تم تدقيقها" بالتحديث
       try {
         await context.read<PostedCubit>().refresh();
       } catch (_) {}
@@ -104,14 +103,25 @@ class _NotifTabState extends State<NotifTab> {
                 final g = groups[i];
                 final isBusy = _busy.contains(g.invoiceId);
                 final type = g.invoiceType ?? '';
+                final isEdited = (g.kind ?? '').toLowerCase() == 'edit';
 
-                return Card(
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    side: BorderSide(color: Colors.grey.shade300),
+                // إعدادات البطاقة حسب حالة التعديل
+                final Color cardColor = isEdited
+                    ? Colors.red.shade50
+                    : _typeColor(type);
+                final shape = RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(
+                    color: isEdited ? Colors.redAccent : Colors.grey.shade300,
+                    width: isEdited ? 2 : 1,
                   ),
-                  color: _typeColor(type),
+                );
+
+                // محتوى البطاقة (نفس تصميمك للأصل)
+                Widget tile = Card(
+                  elevation: isEdited ? 4 : 2,
+                  shape: shape,
+                  color: cardColor,
                   child: Padding(
                     padding: const EdgeInsets.all(12),
                     child: Column(
@@ -132,7 +142,12 @@ class _NotifTabState extends State<NotifTab> {
                               g.kind == 'new'
                                   ? 'فاتورة جديدة'
                                   : 'تم تعديل فاتورة',
-                              style: FontStyleApp.appColor18,
+                              style: isEdited
+                                  ? FontStyleApp.appColor18.copyWith(
+                                      color: Colors.red.shade800,
+                                      fontWeight: FontWeight.w700,
+                                    )
+                                  : FontStyleApp.appColor18,
                             ),
                             const Spacer(),
                             Text('#${g.invoiceId.substring(0, 8)}'),
@@ -146,13 +161,13 @@ class _NotifTabState extends State<NotifTab> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    style: FontStyleApp.appColor18,
                                     'الحساب: ${g.accountName ?? '-'}',
+                                    style: FontStyleApp.appColor18,
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    style: FontStyleApp.appColor18,
                                     'التاريخ: ${g.invoiceDate ?? '-'}',
+                                    style: FontStyleApp.appColor18,
                                   ),
                                 ],
                               ),
@@ -161,13 +176,18 @@ class _NotifTabState extends State<NotifTab> {
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
                                 Text(
-                                  style: FontStyleApp.appColor18,
                                   'النوع: ${_typeLabel(type)}',
+                                  style: FontStyleApp.appColor18,
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  style: FontStyleApp.appColor18,
-                                  'تغييرات: ${g.count}',
+                                  'تغييرات: ${g.count ?? 0}',
+                                  style: isEdited
+                                      ? FontStyleApp.appColor18.copyWith(
+                                          color: Colors.red.shade700,
+                                          fontWeight: FontWeight.w700,
+                                        )
+                                      : FontStyleApp.appColor18,
                                 ),
                               ],
                             ),
@@ -175,7 +195,6 @@ class _NotifTabState extends State<NotifTab> {
                         ),
                         const SizedBox(height: 12),
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
                           children: [
                             OutlinedButton(
                               onPressed: () async {
@@ -195,8 +214,7 @@ class _NotifTabState extends State<NotifTab> {
                               },
                               child: const Text('تفاصيل'),
                             ),
-                            Spacer(),
-                            const SizedBox(width: 8),
+                            const Spacer(),
                             ElevatedButton.icon(
                               onPressed: isBusy
                                   ? null
@@ -212,6 +230,11 @@ class _NotifTabState extends State<NotifTab> {
                                     )
                                   : const Icon(Icons.verified),
                               label: const Text('تم التدقيق'),
+                              style: isEdited
+                                  ? ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.redAccent,
+                                    )
+                                  : null,
                             ),
                           ],
                         ),
@@ -219,6 +242,18 @@ class _NotifTabState extends State<NotifTab> {
                     ),
                   ),
                 );
+
+                // شارة "معدّلة" فقط عند التعديل (بدون Stack/Clip)
+                if (isEdited) {
+                  tile = Banner(
+                    message: 'معدّلة',
+                    location: BannerLocation.topEnd,
+                    color: Colors.redAccent,
+                    child: tile,
+                  );
+                }
+
+                return tile;
               },
             ),
           ),
