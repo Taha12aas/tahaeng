@@ -95,130 +95,132 @@ class _NotifTabState extends State<NotifTab> {
 
         return RefreshIndicator(
           onRefresh: () => context.read<NotifCubit>().refresh(),
-          child: ListView.separated(
-            padding: const EdgeInsets.all(12),
-            itemCount: groups.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 8),
-            itemBuilder: (_, i) {
-              final g = groups[i];
-              final isBusy = _busy.contains(g.invoiceId);
-              final type = g.invoiceType ?? '';
+          child: SafeArea(
+            child: ListView.separated(
+              padding: const EdgeInsets.all(12),
+              itemCount: groups.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 8),
+              itemBuilder: (_, i) {
+                final g = groups[i];
+                final isBusy = _busy.contains(g.invoiceId);
+                final type = g.invoiceType ?? '';
 
-              return Card(
-                elevation: 2,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  side: BorderSide(color: Colors.grey.shade300),
-                ),
-                color: _typeColor(type),
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Chip(
-                            label: Text(
-                              _typeLabel(type),
+                return Card(
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: BorderSide(color: Colors.grey.shade300),
+                  ),
+                  color: _typeColor(type),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Chip(
+                              label: Text(
+                                _typeLabel(type),
+                                style: FontStyleApp.appColor18,
+                              ),
+                              backgroundColor: Colors.white,
+                              side: BorderSide(color: Colors.grey.shade300),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              g.kind == 'new'
+                                  ? 'فاتورة جديدة'
+                                  : 'تم تعديل فاتورة',
                               style: FontStyleApp.appColor18,
                             ),
-                            backgroundColor: Colors.white,
-                            side: BorderSide(color: Colors.grey.shade300),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            g.kind == 'new'
-                                ? 'فاتورة جديدة'
-                                : 'تم تعديل فاتورة',
-                            style: FontStyleApp.appColor18,
-                          ),
-                          const Spacer(),
-                          Text('#${g.invoiceId.substring(0, 8)}'),
-                        ],
-                      ),
-                      const Divider(),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                            const Spacer(),
+                            Text('#${g.invoiceId.substring(0, 8)}'),
+                          ],
+                        ),
+                        const Divider(),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    style: FontStyleApp.appColor18,
+                                    'الحساب: ${g.accountName ?? '-'}',
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    style: FontStyleApp.appColor18,
+                                    'التاريخ: ${g.invoiceDate ?? '-'}',
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
                                 Text(
                                   style: FontStyleApp.appColor18,
-                                  'الحساب: ${g.accountName ?? '-'}',
+                                  'النوع: ${_typeLabel(type)}',
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
                                   style: FontStyleApp.appColor18,
-                                  'التاريخ: ${g.invoiceDate ?? '-'}',
+                                  'تغييرات: ${g.count}',
                                 ),
                               ],
                             ),
-                          ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Text(
-                                style: FontStyleApp.appColor18,
-                                'النوع: ${_typeLabel(type)}',
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                style: FontStyleApp.appColor18,
-                                'تغييرات: ${g.count}',
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          OutlinedButton(
-                            onPressed: () async {
-                              final moved = await Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => InvoiceDetailsView(
-                                    invoiceId: g.invoiceId,
-                                  ),
-                                ),
-                              );
-                              if (moved == true && mounted) {
-                                context.read<NotifCubit>().refresh();
-                                try {
-                                  context.read<PostedCubit>().refresh();
-                                } catch (_) {}
-                              }
-                            },
-                            child: const Text('تفاصيل'),
-                          ),
-                          Spacer(),
-                          const SizedBox(width: 8),
-                          ElevatedButton.icon(
-                            onPressed: isBusy
-                                ? null
-                                : () => _check(g.invoiceId),
-                            icon: isBusy
-                                ? const SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Colors.white,
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            OutlinedButton(
+                              onPressed: () async {
+                                final moved = await Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => InvoiceDetailsView(
+                                      invoiceId: g.invoiceId,
                                     ),
-                                  )
-                                : const Icon(Icons.verified),
-                            label: const Text('تم التدقيق'),
-                          ),
-                        ],
-                      ),
-                    ],
+                                  ),
+                                );
+                                if (moved == true && mounted) {
+                                  context.read<NotifCubit>().refresh();
+                                  try {
+                                    context.read<PostedCubit>().refresh();
+                                  } catch (_) {}
+                                }
+                              },
+                              child: const Text('تفاصيل'),
+                            ),
+                            Spacer(),
+                            const SizedBox(width: 8),
+                            ElevatedButton.icon(
+                              onPressed: isBusy
+                                  ? null
+                                  : () => _check(g.invoiceId),
+                              icon: isBusy
+                                  ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : const Icon(Icons.verified),
+                              label: const Text('تم التدقيق'),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           ),
         );
       },
