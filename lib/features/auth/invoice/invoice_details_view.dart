@@ -4,11 +4,13 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:tahaeng/features/auth/notifs/cubit/posted_state/PostedCubit.dart';
+import 'package:tahaeng/features/auth/notifs/widgets/items_cards.dart';
 import 'package:tahaeng/features/auth/notifs/widgets/status_chip.dart';
 import 'package:tahaeng/features/utils/const.dart';
 import 'package:tahaeng/features/utils/font_style.dart';
 import '../notifs/cubit/notif_cubit.dart';
 
+import '../notifs/services/notification_service.dart';
 import 'invoice_service.dart';
 
 class InvoiceDetailsView extends StatefulWidget {
@@ -20,7 +22,6 @@ class InvoiceDetailsView extends StatefulWidget {
 }
 
 class _InvoiceDetailsViewState extends State<InvoiceDetailsView> {
-  // ignore: unused_field
   final _df = DateFormat('yyyy-MM-dd');
   Map<String, dynamic>? d;
   bool _loading = true;
@@ -45,20 +46,11 @@ class _InvoiceDetailsViewState extends State<InvoiceDetailsView> {
     } catch (e) {
       setState(() => _error = e.toString());
     } finally {
-      setState(() => _loading = false);
+      if (mounted) setState(() => _loading = false);
     }
   }
 
-  String fmtQty(num v) {
-    final dv = v.toDouble();
-    if (dv == dv.roundToDouble()) return dv.toStringAsFixed(0);
-    return dv
-        .toStringAsFixed(3)
-        .replaceFirst(RegExp(r'0+$'), '')
-        .replaceFirst(RegExp(r'\.$'), '');
-  }
-
-  String typeLabel(String type) {
+  String _typeLabel(String type) {
     switch (type) {
       case 'sale':
         return 'مبيع';
@@ -75,36 +67,55 @@ class _InvoiceDetailsViewState extends State<InvoiceDetailsView> {
     }
   }
 
+  String _dateLabel(dynamic v) {
+    if (v == null) return '-';
+    if (v is DateTime) return _df.format(v);
+    final s = v.toString();
+    final dt = DateTime.tryParse(s);
+    return dt != null ? _df.format(dt) : s;
+  }
+
+  String _creatorName(Map<String, dynamic>? data) {
+    final u = (data?['users'] as Map?)?.cast<String, dynamic>();
+    final name = (u?['full_name'] as String?)?.trim();
+    final email = (u?['email'] as String?)?.trim();
+    if (name != null && name.isNotEmpty) return name;
+    if (email != null && email.isNotEmpty) return email!;
+    return '-';
+  }
+
   Future<void> _checkInvoice() async {
     if (_checking) return;
     setState(() => _checking = true);
+
+    // خزّن المراجع قبل await
+    final navigator = Navigator.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final postedCubit = context.read<PostedCubit?>();
+    final notifCubit = context.read<NotifCubit?>();
+
     try {
-      await Supabase.instance.client.rpc(
-        'fn_accountant_check_invoice',
-        params: {'p_invoice_id': widget.invoiceId},
-      );
-      setState(() {
-        if (d != null) d!['checked_by_accountant'] = true;
-      });
+      await NotificationService(
+        Supabase.instance.client,
+      ).markChecked(widget.invoiceId);
 
-      // حدّث تبويب "تم تدقيقها" + "غير مدققة"
-      try {
-        context.read<PostedCubit>().refresh();
-      } catch (_) {}
-      try {
-        context.read<NotifCubit>().refresh();
-      } catch (_) {}
+      if (mounted) {
+        setState(() {
+          if (d != null) d!['checked_by_accountant'] = true;
+        });
+      }
 
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('تم التدقيق')));
-      Navigator.pop(context, true); // رجوع مع إشارة للتحديث
+      await postedCubit?.refresh();
+      await notifCubit?.refresh();
+
+      messenger.showSnackBar(const SnackBar(content: Text('تم التدقيق')));
+      navigator.pop(true);
     } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('خطأ أثناء التدقيق: $e')));
+      if (mounted) {
+        messenger.showSnackBar(
+          SnackBar(content: Text('خطأ أثناء التدقيق: $e')),
+        );
+      }
     } finally {
       if (mounted) setState(() => _checking = false);
     }
@@ -124,6 +135,10 @@ class _InvoiceDetailsViewState extends State<InvoiceDetailsView> {
               child: Center(
                 child: StatusChip(
                   checked: data?['checked_by_accountant'] == true,
+                  compact: true,
+                  tooltip: (data?['checked_by_accountant'] == true)
+                      ? 'مدقّقة'
+                      : 'بانتظار التدقيق',
                 ),
               ),
             ),
@@ -133,7 +148,20 @@ class _InvoiceDetailsViewState extends State<InvoiceDetailsView> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-          ? Center(child: Text('خطأ: $_error'))
+          ? Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('خطأ: $_error', textAlign: TextAlign.center),
+                  const SizedBox(height: 12),
+                  ElevatedButton.icon(
+                    onPressed: _load,
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('إعادة المحاولة'),
+                  ),
+                ],
+              ),
+            )
           : Padding(
               padding: const EdgeInsets.all(12),
               child: Column(
@@ -167,6 +195,7 @@ class _InvoiceDetailsViewState extends State<InvoiceDetailsView> {
                                 style: FontStyleApp.appColor18,
                               ),
                             ),
+                          const SizedBox(width: 10),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.end,
@@ -177,10 +206,10 @@ class _InvoiceDetailsViewState extends State<InvoiceDetailsView> {
                                   children: [
                                     Chip(
                                       label: Text(
-                                        style: FontStyleApp.appColor18,
-                                        typeLabel(
-                                          (data!['type'] ?? '').toString(),
+                                        _typeLabel(
+                                          (data?['type'] ?? '').toString(),
                                         ),
+                                        style: FontStyleApp.appColor18,
                                       ),
                                       backgroundColor: Colors.white,
                                       side: BorderSide(
@@ -191,14 +220,21 @@ class _InvoiceDetailsViewState extends State<InvoiceDetailsView> {
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
-                                  'التاريخ: ${data['date'] ?? '-'}',
+                                  'التاريخ: ${_dateLabel(data?['date'])}',
                                   style: FontStyleApp.black18,
                                 ),
-                                SizedBox(height: 5),
+                                const SizedBox(height: 5),
                                 FittedBox(
                                   child: Text(
+                                    'الحساب: ${data?['accounts']?['name'] ?? '-'}',
                                     style: FontStyleApp.black18,
-                                    'الحساب: ${data['accounts']?['name'] ?? '-'}',
+                                  ),
+                                ),
+                                const SizedBox(height: 5),
+                                FittedBox(
+                                  child: Text(
+                                    'أضيفت بواسطة: ${_creatorName(data)}',
+                                    style: FontStyleApp.black18,
                                   ),
                                 ),
                               ],
@@ -209,8 +245,8 @@ class _InvoiceDetailsViewState extends State<InvoiceDetailsView> {
                     ),
                   ),
 
-                  // كارد ملاحظات (إن وجدت)
-                  if ((data['notes'] ?? '').toString().trim().isNotEmpty) ...[
+                  if (((data?['notes'] ?? '').toString().trim())
+                      .isNotEmpty) ...[
                     const SizedBox(height: 8),
                     Card(
                       elevation: 2,
@@ -224,12 +260,12 @@ class _InvoiceDetailsViewState extends State<InvoiceDetailsView> {
                           children: [
                             Expanded(
                               child: Text(
+                                (data?['notes'] ?? '').toString(),
                                 textAlign: TextAlign.right,
-                                (data['notes'] ?? '').toString(),
                                 style: FontStyleApp.appColor18,
                               ),
                             ),
-                            SizedBox(width: 10),
+                            const SizedBox(width: 10),
                             const Icon(
                               Icons.sticky_note_2_outlined,
                               color: kAppColor,
@@ -243,10 +279,11 @@ class _InvoiceDetailsViewState extends State<InvoiceDetailsView> {
 
                   const SizedBox(height: 8),
 
-                  // بطاقات الأصناف (اسم المادة + كود المحاسبة + الوحدة + الكمية)
                   Expanded(
                     child: ItemsCards(
-                      items: (data['invoice_items'] as List?) ?? const [],
+                      items: (data?['invoice_items'] as List?) ?? const [],
+                      dense: false,
+                      showIndex: true,
                     ),
                   ),
                 ],

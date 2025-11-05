@@ -1,23 +1,25 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AcctInvoiceService {
-  final SupabaseClient sb;
-  AcctInvoiceService(this.sb);
+  final SupabaseClient _sb;
+  AcctInvoiceService(this._sb);
 
-  Future<Map<String, dynamic>> fetchInvoice(String id) async {
-    final data = await sb
+  Future<Map<String, dynamic>> fetchInvoice(String invoiceId) async {
+    final row = await _sb
         .from('invoices')
         .select('''
-          id, date, type, notes, checked_by_accountant,
-          accounts:account_id (name),
+          id, warehouse_id, account_id, created_by, type, date, notes, created_at,
+          checked_by_accountant, checked_at,
+          accounts:account_id (id, name),
+          users:created_by (full_name, email),
           invoice_items (
-            quantity,
-            medicines:medicine_id (name, unit, internal_code)
+            id, invoice_id, medicine_id, quantity,
+            medicines:medicine_id (id, name, internal_code, barcode, unit)
           )
         ''')
-        .eq('id', id)
+        .eq('id', invoiceId)
         .single();
 
-    return Map<String, dynamic>.from(data as Map);
+    return Map<String, dynamic>.from(row as Map);
   }
 }

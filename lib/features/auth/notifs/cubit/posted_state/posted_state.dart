@@ -1,35 +1,22 @@
-import 'package:tahaeng/features/auth/notifs/models/posted_invoice.dart';
-
-abstract class PostedState {}
-
-class PostedInitial extends PostedState {}
-
-class PostedLoading extends PostedState {}
-
+abstract class PostedState {
+  const PostedState();
+}
+class PostedLoading extends PostedState { const PostedLoading(); }
+class PostedFailure extends PostedState {
+  final String message;
+  const PostedFailure(this.message);
+}
 class PostedLoaded extends PostedState {
-  final List<PostedInvoice> items;
+  final List<Map<String, dynamic>> items;
   final bool hasMore;
   final bool isLoadingMore;
-  PostedLoaded({
-    required this.items,
-    required this.hasMore,
-    this.isLoadingMore = false,
-  });
+  const PostedLoaded({required this.items, required this.hasMore, this.isLoadingMore=false});
 
-  PostedLoaded copyWith({
-    List<PostedInvoice>? items,
-    bool? hasMore,
-    bool? isLoadingMore,
-  }) {
+  PostedLoaded copyWith({List<Map<String, dynamic>>? items, bool? hasMore, bool? isLoadingMore}) {
     return PostedLoaded(
       items: items ?? this.items,
       hasMore: hasMore ?? this.hasMore,
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
     );
   }
-}
-
-class PostedFailure extends PostedState {
-  final String message;
-  PostedFailure(this.message);
 }
