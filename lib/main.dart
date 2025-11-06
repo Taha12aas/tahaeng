@@ -34,6 +34,7 @@ class AccountantApp extends StatelessWidget {
         child: Builder(
           builder: (ctx) => WarehousePickerPage(
             onSelected: (warehouseId) {
+              
               Navigator.of(ctx).pushReplacement(
                 MaterialPageRoute(
                   builder: (_) => AccountantHomeView(warehouseId: warehouseId),

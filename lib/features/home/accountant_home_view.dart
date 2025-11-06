@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-// خدمات وإدارة الحالة
+// خدمات وإدارة الحالة (التبويبات)
 import 'package:tahaeng/features/auth/notifs/services/notification_service.dart';
 import 'package:tahaeng/features/auth/notifs/cubit/notif_cubit.dart';
 import 'package:tahaeng/features/auth/notifs/cubit/posted_state/PostedCubit.dart';
 
-// الشاشات الفرعية (التبويبات)
+// الشاشات الفرعية
 import 'package:tahaeng/features/auth/notifs/views/notif_tab.dart';
 import 'package:tahaeng/features/auth/notifs/views/posted_list_view.dart';
 
@@ -16,41 +16,47 @@ import 'package:tahaeng/features/auth/notifs/views/warehouse_picker_page.dart';
 import 'package:tahaeng/features/auth/notifs/cubit/warehouse_picker_cubit.dart';
 import 'package:tahaeng/features/auth/notifs/services/warehouse_service.dart';
 
+// شاشة إدارة المستودعات (عدّل المسار حسب مشروعك)
+import 'package:tahaeng/admin/views/warehouse_list_page.dart';
+
 class AccountantHomeView extends StatelessWidget {
   final String warehouseId;
-  final String? warehouseName; // اختياري لعرض الاسم إن توفر
+  final String? warehouseName; // اختياري لعرض الاسم
   const AccountantHomeView({
     super.key,
     required this.warehouseId,
     this.warehouseName,
   });
 
-  // المهم هنا: لا نستعمل context داخل onSelected بعد pushReplacement
-  // نلتقط NavigatorState قبل الانتقال ونستخدمه لاحقًا.
+  // افتح شاشة اختيار المستودع (بدون استخدام context القديم بعد الاستبدال)
   Future<void> _openWarehousePicker(BuildContext context) async {
-    final nav = Navigator.of(context); // التقط الـ Navigator مرة واحدة
-
+    final nav = Navigator.of(context);
     nav.pushReplacement(
       MaterialPageRoute(
-        builder: (_) {
-          return BlocProvider(
-            create: (_) => WarehousePickerCubit(WarehouseService())..load(),
-            child: Builder(
-              builder: (pickerCtx) => WarehousePickerPage(
-                onSelected: (whId) {
-                  // نستخدم nav (المحفوظ) أو Navigator.of(pickerCtx) وليس context القديم
-                  nav.pushReplacement(
-                    MaterialPageRoute(
-                      builder: (_) => AccountantHomeView(warehouseId: whId),
-                    ),
-                  );
-                },
-              ),
+        builder: (_) => BlocProvider(
+          create: (_) => WarehousePickerCubit(WarehouseService())..load(),
+          child: Builder(
+            builder: (pickerCtx) => WarehousePickerPage(
+              onSelected: (whId) {
+                // استخدم nav الذي التقطناه مسبقًا
+                nav.pushReplacement(
+                  MaterialPageRoute(
+                    builder: (_) => AccountantHomeView(warehouseId: whId),
+                  ),
+                );
+              },
             ),
-          );
-        },
+          ),
+        ),
       ),
     );
+  }
+
+  // افتح شاشة إدارة المستودعات
+  void _openWarehouseAdmin(BuildContext context) {
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const WarehouseListPage()));
   }
 
   @override
@@ -67,6 +73,9 @@ class AccountantHomeView extends StatelessWidget {
         BlocProvider(
           create: (_) =>
               PostedCubit(notificationService)..setWarehouse(warehouseId),
+        ),
+        BlocProvider(
+          create: (_) => WarehousePickerCubit(WarehouseService())..load(),
         ),
       ],
       child: Directionality(
@@ -85,6 +94,25 @@ class AccountantHomeView extends StatelessWidget {
                     ? 'لوحة المحاسب'
                     : 'لوحة المحاسب • ${warehouseName!}',
               ),
+              actions: [
+                // زر إدارة المستودعات
+                IconButton(
+                  tooltip: 'إدارة المستودعات',
+                  icon: const Icon(Icons.inventory_2_outlined),
+                  onPressed: () => _openWarehouseAdmin(context),
+                ),
+                // (اختياري) قائمة خيارات مستقبلية
+                // PopupMenuButton<String>(
+                //   onSelected: (v) {
+                //     if (v == 'admin') _openWarehouseAdmin(context);
+                //     if (v == 'switch') _openWarehousePicker(context);
+                //   },
+                //   itemBuilder: (_) => [
+                //     const PopupMenuItem(value: 'admin', child: Text('إدارة المستودعات')),
+                //     const PopupMenuItem(value: 'switch', child: Text('تبديل المستودع')),
+                //   ],
+                // ),
+              ],
               bottom: const TabBar(
                 tabs: [
                   Tab(text: 'غير مدققة'),
