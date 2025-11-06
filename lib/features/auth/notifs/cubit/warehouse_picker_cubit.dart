@@ -7,9 +7,19 @@ class WarehousePickerState {
   final List<Warehouse> warehouses;
   final String? selectedId;
   final String? error;
-  const WarehousePickerState({this.loading=false, this.warehouses=const [], this.selectedId, this.error});
+  const WarehousePickerState({
+    this.loading = false,
+    this.warehouses = const [],
+    this.selectedId,
+    this.error,
+  });
 
-  WarehousePickerState copyWith({bool? loading, List<Warehouse>? warehouses, String? selectedId, String? error}) {
+  WarehousePickerState copyWith({
+    bool? loading,
+    List<Warehouse>? warehouses,
+    String? selectedId,
+    String? error,
+  }) {
     return WarehousePickerState(
       loading: loading ?? this.loading,
       warehouses: warehouses ?? this.warehouses,
@@ -23,15 +33,34 @@ class WarehousePickerCubit extends Cubit<WarehousePickerState> {
   WarehousePickerCubit(this._service) : super(const WarehousePickerState());
   final WarehouseService _service;
 
+  bool _busy = false;
+
   Future<void> load() async {
-    emit(state.copyWith(loading: true, error: null));
+    if (isClosed) return;
+    if (_busy) return; // امنع تداخل
+    _busy = true;
+
+    if (!isClosed) {
+      emit(state.copyWith(loading: true, error: null));
+    }
     try {
       final list = await _service.fetchAll();
-      emit(state.copyWith(loading: false, warehouses: list, selectedId: list.isNotEmpty ? list.first.id : null));
+      if (isClosed) return; // لو الصفحة انتقلت أثناء الانتظار
+      emit(state.copyWith(
+        loading: false,
+        warehouses: list,
+        selectedId: list.isNotEmpty ? list.first.id : null,
+      ));
     } catch (e) {
+      if (isClosed) return;
       emit(state.copyWith(loading: false, error: e.toString()));
+    } finally {
+      _busy = false;
     }
   }
 
-  void select(String id) => emit(state.copyWith(selectedId: id));
+  void select(String id) {
+    if (isClosed) return;
+    emit(state.copyWith(selectedId: id));
+  }
 }
