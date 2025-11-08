@@ -92,135 +92,137 @@ class _NotifTabState extends State<NotifTab> {
 
         return RefreshIndicator(
           onRefresh: () => context.read<NotifCubit>().refresh(),
-          child: ListView.separated(
-            padding: const EdgeInsets.all(12),
-            itemCount: groups.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 8),
-            itemBuilder: (_, i) {
-              final g = groups[i];
-              final isBusy = _busy.contains(g.invoiceId);
-              final type = g.invoiceType ?? '';
-              final isEdited = (g.kind.toLowerCase() == 'edit');
+          child: SafeArea(
+            child: ListView.separated(
+              padding: const EdgeInsets.all(12),
+              itemCount: groups.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 8),
+              itemBuilder: (_, i) {
+                final g = groups[i];
+                final isBusy = _busy.contains(g.invoiceId);
+                final type = g.invoiceType ?? '';
+                final isEdited = (g.kind.toLowerCase() == 'edit');
 
-              final Color cardColor = isEdited
-                  ? Colors.red.shade50
-                  : _typeColor(type);
-              final shape = RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-                side: BorderSide(
-                  color: isEdited ? Colors.redAccent : Colors.grey.shade300,
-                  width: isEdited ? 2 : 1,
-                ),
-              );
+                final Color cardColor = isEdited
+                    ? Colors.red.shade50
+                    : _typeColor(type);
+                final shape = RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(
+                    color: isEdited ? Colors.redAccent : Colors.grey.shade300,
+                    width: isEdited ? 2 : 1,
+                  ),
+                );
 
-              Widget tile = Card(
-                elevation: isEdited ? 4 : 2,
-                shape: shape,
-                color: cardColor,
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Chip(
-                            label: Text(_typeLabel(type)),
-                            backgroundColor: Colors.white,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(isEdited ? 'تم تعديل فاتورة' : 'فاتورة جديدة'),
-                          const Spacer(),
-                          Text('#${g.invoiceId.substring(0, 8)}'),
-                        ],
-                      ),
-                      const Divider(),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                Widget tile = Card(
+                  elevation: isEdited ? 4 : 2,
+                  shape: shape,
+                  color: cardColor,
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Chip(
+                              label: Text(_typeLabel(type)),
+                              backgroundColor: Colors.white,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(isEdited ? 'تم تعديل فاتورة' : 'فاتورة جديدة'),
+                            const Spacer(),
+                            Text('#${g.invoiceId.substring(0, 8)}'),
+                          ],
+                        ),
+                        const Divider(),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('الحساب: ${g.accountName ?? '-'}'),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'أضيفت بواسطة: ${g.createdByName ?? '-'}',
+                                  ), // جديد
+                                  const SizedBox(height: 4),
+                                  Text('التاريخ: ${g.invoiceDate ?? '-'}'),
+                                ],
+                              ),
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
-                                Text('الحساب: ${g.accountName ?? '-'}'),
+                                Text('النوع: ${_typeLabel(type)}'),
                                 const SizedBox(height: 4),
-                                Text(
-                                  'أضيفت بواسطة: ${g.createdByName ?? '-'}',
-                                ), // جديد
-                                const SizedBox(height: 4),
-                                Text('التاريخ: ${g.invoiceDate ?? '-'}'),
+                                Text('تغييرات: ${g.count}'),
                               ],
                             ),
-                          ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Text('النوع: ${_typeLabel(type)}'),
-                              const SizedBox(height: 4),
-                              Text('تغييرات: ${g.count}'),
-                            ],
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          OutlinedButton(
-                            onPressed: () async {
-                              final moved = await Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => InvoiceDetailsView(
-                                    invoiceId: g.invoiceId,
-                                  ),
-                                ),
-                              );
-                              if (moved == true && mounted) {
-                                context.read<NotifCubit>().refresh();
-                                try {
-                                  context.read<PostedCubit>().refresh();
-                                } catch (_) {}
-                              }
-                            },
-                            child: const Text('تفاصيل'),
-                          ),
-                          const Spacer(),
-                          ElevatedButton.icon(
-                            onPressed: isBusy
-                                ? null
-                                : () => _check(g.invoiceId),
-                            icon: isBusy
-                                ? const SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Colors.white,
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            OutlinedButton(
+                              onPressed: () async {
+                                final moved = await Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => InvoiceDetailsView(
+                                      invoiceId: g.invoiceId,
                                     ),
-                                  )
-                                : const Icon(Icons.verified),
-                            label: const Text('تم التدقيق'),
-                            style: isEdited
-                                ? ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.redAccent,
-                                  )
-                                : null,
-                          ),
-                        ],
-                      ),
-                    ],
+                                  ),
+                                );
+                                if (moved == true && mounted) {
+                                  context.read<NotifCubit>().refresh();
+                                  try {
+                                    context.read<PostedCubit>().refresh();
+                                  } catch (_) {}
+                                }
+                              },
+                              child: const Text('تفاصيل'),
+                            ),
+                            const Spacer(),
+                            ElevatedButton.icon(
+                              onPressed: isBusy
+                                  ? null
+                                  : () => _check(g.invoiceId),
+                              icon: isBusy
+                                  ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : const Icon(Icons.verified),
+                              label: const Text('تم التدقيق'),
+                              style: isEdited
+                                  ? ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.redAccent,
+                                    )
+                                  : null,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              );
-
-              if (isEdited) {
-                tile = Banner(
-                  message: 'معدّلة',
-                  location: BannerLocation.topEnd,
-                  color: Colors.redAccent,
-                  child: tile,
                 );
-              }
-              return tile;
-            },
+
+                if (isEdited) {
+                  tile = Banner(
+                    message: 'معدّلة',
+                    location: BannerLocation.topEnd,
+                    color: Colors.redAccent,
+                    child: tile,
+                  );
+                }
+                return tile;
+              },
+            ),
           ),
         );
       },

@@ -46,11 +46,13 @@ class WarehousePickerCubit extends Cubit<WarehousePickerState> {
     try {
       final list = await _service.fetchAll();
       if (isClosed) return; // لو الصفحة انتقلت أثناء الانتظار
-      emit(state.copyWith(
-        loading: false,
-        warehouses: list,
-        selectedId: list.isNotEmpty ? list.first.id : null,
-      ));
+      emit(
+        state.copyWith(
+          loading: false,
+          warehouses: list,
+          selectedId: list.isNotEmpty ? list.first.id : null,
+        ),
+      );
     } catch (e) {
       if (isClosed) return;
       emit(state.copyWith(loading: false, error: e.toString()));
