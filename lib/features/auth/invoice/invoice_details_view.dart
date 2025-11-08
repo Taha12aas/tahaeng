@@ -9,7 +9,6 @@ import 'package:tahaeng/features/auth/notifs/widgets/status_chip.dart';
 import 'package:tahaeng/features/utils/const.dart';
 import 'package:tahaeng/features/utils/font_style.dart';
 import '../notifs/cubit/notif_cubit.dart';
-
 import '../notifs/services/notification_service.dart';
 import 'invoice_service.dart';
 
@@ -80,7 +79,7 @@ class _InvoiceDetailsViewState extends State<InvoiceDetailsView> {
     final name = (u?['full_name'] as String?)?.trim();
     final email = (u?['email'] as String?)?.trim();
     if (name != null && name.isNotEmpty) return name;
-    if (email != null && email.isNotEmpty) return email!;
+    if (email != null && email.isNotEmpty) return email;
     return '-';
   }
 
@@ -88,7 +87,6 @@ class _InvoiceDetailsViewState extends State<InvoiceDetailsView> {
     if (_checking) return;
     setState(() => _checking = true);
 
-    // خزّن المراجع قبل await
     final navigator = Navigator.of(context);
     final messenger = ScaffoldMessenger.of(context);
     final postedCubit = context.read<PostedCubit?>();
@@ -224,12 +222,24 @@ class _InvoiceDetailsViewState extends State<InvoiceDetailsView> {
                                   style: FontStyleApp.black18,
                                 ),
                                 const SizedBox(height: 5),
-                                FittedBox(
-                                  child: Text(
-                                    'الحساب: ${data?['accounts']?['name'] ?? '-'}',
-                                    style: FontStyleApp.black18,
+
+                                // 🔹 عرض الحساب أو المستودعات حسب نوع الفاتورة
+                                if ((data?['type']) == 'order') ...[
+                                  FittedBox(
+                                    child: Text(
+                                      'من مستودع: ${data?['from_wh']?['name'] ?? '-'}   إلى مستودع: ${data?['to_wh']?['name'] ?? '-'}',
+                                      style: FontStyleApp.appColor18,
+                                    ),
                                   ),
-                                ),
+                                ] else ...[
+                                  FittedBox(
+                                    child: Text(
+                                      'الحساب: ${data?['accounts']?['name'] ?? '-'}',
+                                      style: FontStyleApp.black18,
+                                    ),
+                                  ),
+                                ],
+
                                 const SizedBox(height: 5),
                                 FittedBox(
                                   child: Text(
