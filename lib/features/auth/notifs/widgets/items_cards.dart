@@ -4,8 +4,8 @@ import 'package:tahaeng/features/utils/font_style.dart';
 
 class ItemsCards extends StatelessWidget {
   final List items;
-  final bool dense;         // جديد: مظهر مضغوط
-  final bool showIndex;     // جديد: عرض الرقم التسلسلي
+  final bool dense; // جديد: مظهر مضغوط
+  final bool showIndex; // جديد: عرض الرقم التسلسلي
   const ItemsCards({
     super.key,
     required this.items,
@@ -36,14 +36,14 @@ class ItemsCards extends StatelessWidget {
         final it = (items[i] as Map).cast<String, dynamic>();
         final med = (it['medicines'] as Map?)?.cast<String, dynamic>();
 
-        final name   = (med?['name'] ?? '-').toString();
-        final unit   = (med?['unit'] ?? '-').toString();
-        final code   = (med?['internal_code'] ?? '').toString();
-        final barcode= (med?['barcode'] ?? '').toString();
+        final name = (med?['name'] ?? '-').toString();
+        final unit = (med?['unit'] ?? '-').toString();
+        final code = (med?['internal_code'] ?? '').toString();
+        final barcode = (med?['barcode'] ?? '').toString();
         final qtyNum = (it['quantity'] is num)
             ? (it['quantity'] as num)
             : num.tryParse((it['quantity'] ?? '0').toString()) ?? 0;
-        final qty    = _fmtQty(qtyNum);
+        final qty = _fmtQty(qtyNum);
 
         return Directionality(
           textDirection: TextDirection.rtl,
@@ -59,7 +59,7 @@ class ItemsCards extends StatelessWidget {
                 vertical: dense ? 8 : 10,
               ),
               child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   // الكمية (كبيرة وواضحة)
                   Container(
@@ -73,8 +73,8 @@ class ItemsCards extends StatelessWidget {
                     ),
                     child: Text(
                       qty,
-                      style: FontStyleApp.appColor18.copyWith(
-                        fontSize: dense ? 15 : 17,
+                      style: FontStyleApp.black18.copyWith(
+                        fontSize: dense ? 18 : 20,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -92,7 +92,9 @@ class ItemsCards extends StatelessWidget {
                           children: [
                             if (showIndex)
                               Padding(
-                                padding: const EdgeInsetsDirectional.only(end: 6.0),
+                                padding: const EdgeInsetsDirectional.only(
+                                  end: 6.0,
+                                ),
                                 child: Text(
                                   '#${i + 1}',
                                   style: TextStyle(
@@ -113,7 +115,7 @@ class ItemsCards extends StatelessWidget {
                                   textAlign: TextAlign.right,
                                   style: FontStyleApp.appColor18.copyWith(
                                     fontWeight: FontWeight.w700,
-                                    fontSize: dense ? 15 : 17,
+                                    fontSize: dense ? 18 : 18,
                                   ),
                                 ),
                               ),
@@ -132,13 +134,22 @@ class ItemsCards extends StatelessWidget {
                           runSpacing: 6,
                           children: [
                             _tagBox(
-                              text: code.isEmpty ? 'كود المحاسبة: -' : 'كود المحاسبة: $code',
-                              onCopy: code.isEmpty ? null : () => _copy(context, code, 'تم نسخ كود المحاسبة'),
+                              text: code.isEmpty
+                                  ? 'كود المحاسبة: -'
+                                  : 'كود المحاسبة: $code',
+                              onCopy: code.isEmpty
+                                  ? null
+                                  : () => _copy(
+                                      context,
+                                      code,
+                                      'تم نسخ كود المحاسبة',
+                                    ),
                             ),
                             if (barcode.isNotEmpty)
                               _tagBox(
                                 text: 'الباركود: $barcode',
-                                onCopy: () => _copy(context, barcode, 'تم نسخ الباركود'),
+                                onCopy: () =>
+                                    _copy(context, barcode, 'تم نسخ الباركود'),
                               ),
                           ],
                         ),
@@ -185,7 +196,7 @@ class ItemsCards extends StatelessWidget {
               text,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 12.5, color: Colors.black87),
+              style: const TextStyle(fontSize: 15, color: Colors.black),
             ),
           ),
           if (onCopy != null) ...[
@@ -193,7 +204,7 @@ class ItemsCards extends StatelessWidget {
             InkWell(
               borderRadius: BorderRadius.circular(6),
               onTap: onCopy,
-              child: const Icon(Icons.copy, size: 16, color: Colors.black54),
+              child: const Icon(Icons.copy, size: 18, color: Colors.black54),
             ),
           ],
         ],
@@ -204,7 +215,11 @@ class ItemsCards extends StatelessWidget {
   void _copy(BuildContext context, String value, String toast) async {
     await Clipboard.setData(ClipboardData(text: value));
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(toast), behavior: SnackBarBehavior.floating, duration: const Duration(milliseconds: 900)),
+      SnackBar(
+        content: Text(toast),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(milliseconds: 900),
+      ),
     );
   }
 }

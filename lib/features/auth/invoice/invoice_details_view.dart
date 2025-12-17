@@ -128,15 +128,17 @@ class _InvoiceDetailsViewState extends State<InvoiceDetailsView> {
         title: const Text('تفاصيل الفاتورة'),
         actions: [
           if (!_loading && _error == null)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Center(
-                child: StatusChip(
-                  checked: data?['checked_by_accountant'] == true,
-                  compact: true,
-                  tooltip: (data?['checked_by_accountant'] == true)
-                      ? 'مدقّقة'
-                      : 'بانتظار التدقيق',
+            SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Center(
+                  child: StatusChip(
+                    checked: data?['checked_by_accountant'] == true,
+                    compact: true,
+                    tooltip: (data?['checked_by_accountant'] == true)
+                        ? 'مدقّقة'
+                        : 'بانتظار التدقيق',
+                  ),
                 ),
               ),
             ),
@@ -160,104 +162,11 @@ class _InvoiceDetailsViewState extends State<InvoiceDetailsView> {
                 ],
               ),
             )
-          : Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                children: [
-                  Card(
-                    elevation: 2,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      side: BorderSide(color: Colors.grey.shade300),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (data?['checked_by_accountant'] != true)
-                            ElevatedButton.icon(
-                              onPressed: _checking ? null : _checkInvoice,
-                              icon: _checking
-                                  ? const SizedBox(
-                                      width: 16,
-                                      height: 16,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: Colors.white,
-                                      ),
-                                    )
-                                  : const Icon(Icons.verified),
-                              label: const Text(
-                                'تم التدقيق',
-                                style: FontStyleApp.appColor18,
-                              ),
-                            ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Wrap(
-                                  spacing: 8,
-                                  runSpacing: 8,
-                                  children: [
-                                    Chip(
-                                      label: Text(
-                                        _typeLabel(
-                                          (data?['type'] ?? '').toString(),
-                                        ),
-                                        style: FontStyleApp.appColor18,
-                                      ),
-                                      backgroundColor: Colors.white,
-                                      side: BorderSide(
-                                        color: Colors.grey.shade300,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'التاريخ: ${_dateLabel(data?['date'])}',
-                                  style: FontStyleApp.black18,
-                                ),
-                                const SizedBox(height: 5),
-
-                                // 🔹 عرض الحساب أو المستودعات حسب نوع الفاتورة
-                                if ((data?['type']) == 'order') ...[
-                                  FittedBox(
-                                    child: Text(
-                                      'من مستودع: ${data?['from_wh']?['name'] ?? '-'}   إلى مستودع: ${data?['to_wh']?['name'] ?? '-'}',
-                                      style: FontStyleApp.appColor18,
-                                    ),
-                                  ),
-                                ] else ...[
-                                  FittedBox(
-                                    child: Text(
-                                      'الحساب: ${data?['accounts']?['name'] ?? '-'}',
-                                      style: FontStyleApp.black18,
-                                    ),
-                                  ),
-                                ],
-
-                                const SizedBox(height: 5),
-                                FittedBox(
-                                  child: Text(
-                                    'أضيفت بواسطة: ${_creatorName(data)}',
-                                    style: FontStyleApp.black18,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  if (((data?['notes'] ?? '').toString().trim())
-                      .isNotEmpty) ...[
-                    const SizedBox(height: 8),
+          : SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  children: [
                     Card(
                       elevation: 2,
                       shape: RoundedRectangleBorder(
@@ -267,36 +176,131 @@ class _InvoiceDetailsViewState extends State<InvoiceDetailsView> {
                       child: Padding(
                         padding: const EdgeInsets.all(12),
                         child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            if (data?['checked_by_accountant'] != true)
+                              ElevatedButton.icon(
+                                onPressed: _checking ? null : _checkInvoice,
+                                icon: _checking
+                                    ? const SizedBox(
+                                        width: 16,
+                                        height: 16,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: Colors.white,
+                                        ),
+                                      )
+                                    : const Icon(Icons.verified),
+                                label: const Text(
+                                  'تم التدقيق',
+                                  style: FontStyleApp.appColor18,
+                                ),
+                              ),
+                            const SizedBox(width: 10),
                             Expanded(
-                              child: Text(
-                                (data?['notes'] ?? '').toString(),
-                                textAlign: TextAlign.right,
-                                style: FontStyleApp.appColor18,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Wrap(
+                                    spacing: 8,
+                                    runSpacing: 8,
+                                    children: [
+                                      Chip(
+                                        label: Text(
+                                          _typeLabel(
+                                            (data?['type'] ?? '').toString(),
+                                          ),
+                                          style: FontStyleApp.appColor18,
+                                        ),
+                                        backgroundColor: Colors.white,
+                                        side: BorderSide(
+                                          color: Colors.grey.shade300,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'التاريخ: ${_dateLabel(data?['date'])}',
+                                    style: FontStyleApp.black18,
+                                  ),
+                                  const SizedBox(height: 5),
+
+                                  // 🔹 عرض الحساب أو المستودعات حسب نوع الفاتورة
+                                  if ((data?['type']) == 'order') ...[
+                                    FittedBox(
+                                      child: Text(
+                                        'من مستودع: ${data?['from_wh']?['name'] ?? '-'}   إلى مستودع: ${data?['to_wh']?['name'] ?? '-'}',
+                                        style: FontStyleApp.appColor18,
+                                      ),
+                                    ),
+                                  ] else ...[
+                                    FittedBox(
+                                      child: Text(
+                                        'الحساب: ${data?['accounts']?['name'] ?? '-'}',
+                                        style: FontStyleApp.black18,
+                                      ),
+                                    ),
+                                  ],
+
+                                  const SizedBox(height: 5),
+                                  FittedBox(
+                                    child: Text(
+                                      'أضيفت بواسطة: ${_creatorName(data)}',
+                                      style: FontStyleApp.black18,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                            const SizedBox(width: 10),
-                            const Icon(
-                              Icons.sticky_note_2_outlined,
-                              color: kAppColor,
-                            ),
-                            const SizedBox(width: 8),
                           ],
                         ),
                       ),
                     ),
-                  ],
 
-                  const SizedBox(height: 8),
+                    if (((data?['notes'] ?? '').toString().trim())
+                        .isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Card(
+                        elevation: 2,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  (data?['notes'] ?? '').toString(),
+                                  textAlign: TextAlign.right,
+                                  style: FontStyleApp.appColor18,
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              const Icon(
+                                Icons.sticky_note_2_outlined,
+                                color: kAppColor,
+                              ),
+                              const SizedBox(width: 8),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
 
-                  Expanded(
-                    child: ItemsCards(
-                      items: (data?['invoice_items'] as List?) ?? const [],
-                      dense: false,
-                      showIndex: true,
+                    const SizedBox(height: 8),
+
+                    Expanded(
+                      child: ItemsCards(
+                        items: (data?['invoice_items'] as List?) ?? const [],
+                        dense: false,
+                        showIndex: true,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
     );
