@@ -246,7 +246,7 @@ class _InvoiceDetailsViewState extends State<InvoiceDetailsView> {
                                   const SizedBox(height: 5),
                                   FittedBox(
                                     child: Text(
-                                      'أضيفت بواسطة: ${_creatorName(data)}',
+                                      ' ${_creatorName(data)} : أضيفت بواسطة ',
                                       style: FontStyleApp.black18,
                                     ),
                                   ),
